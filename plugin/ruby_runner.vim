@@ -3,9 +3,22 @@ if exists('g:loaded_RubyRunner')
 endif
 let g:loaded_RubyRunner = 1
 
+
 if has('gui_running')
-  let g:RubyRunner_key = '<D-r>'
-  let g:RubyRunner_keep_focus_key = '<D-R>'
+  if has("unix")
+    let s:uname = system("uname")
+    if s:uname == "Darwin"
+      " Mac key short cuts
+      let g:RubyRunner_key = '<D-r>'
+      let g:RubyRunner_keep_focus_key = '<D-R>'
+    else "Linux key shortcuts
+      let g:RubyRunner_key = '<C-S-r>'
+      let g:RubyRunner_keep_focus_key = '<C-S-f>'
+    endif
+  else "Windows key shortcuts
+    let g:RubyRunner_key = '<C-S-r>'
+    let g:RubyRunner_keep_focus_key = '<C-S-f>'
+  endif
 else
   let g:RubyRunner_key = '<Leader>r'
   let g:RubyRunner_keep_focus_key = '<Leader>R'
@@ -15,7 +28,11 @@ if (!exists("g:RubyRunner_open_below"))
   let g:RubyRunner_open_below = 0
 endif
 
-let s:output_file = '/tmp/ruby_runner_output.txt'
+if has("unix")
+  let s:output_file = "/tmp/ruby_runner_output.txt"
+else
+  let s:output_file = "c:\\temp" . "\\ruby_runner_output.txt"
+endif
 
 function! s:RunRuby()
 
@@ -23,7 +40,8 @@ function! s:RunRuby()
 
   " Prepend 'STDOUT.sync=true' to the script so STDOUT and STDERR appear in the correct order.
   " Also fix load path for require/require_relative.
-  exec 'silent w ! sed "1s/^/STDOUT.sync=true; $:.unshift Dir.pwd; Kernel.class_eval { alias_method :require_relative, :require };/" | ruby >' s:output_file '2>&1'
+  "exec 'silent w ! sed "1s/^/STDOUT.sync=true; $:.unshift Dir.pwd; Kernel.class_eval { alias_method :require_relative, :require };/" | ruby >' s:output_file '2>&1'
+  exec 'silent w ! ruby -pe ''p "STDOUT.sync=true; $:.unshift Dir.pwd; Kernel.class_eval { alias_method :require_relative, :require };" if $.==1 '' | ruby >' s:output_file '2>&1'
 
   cd -  " Back to old dir
 
