@@ -3,7 +3,6 @@ if exists('g:loaded_RubyRunner')
 endif
 let g:loaded_RubyRunner = 1
 
-
 if has('gui_running')
   if has("unix")
     let s:uname = system("uname")
@@ -12,12 +11,14 @@ if has('gui_running')
       let g:RubyRunner_key = '<D-r>'
       let g:RubyRunner_keep_focus_key = '<D-R>'
     else "Linux key shortcuts
-      let g:RubyRunner_key = '<C-S-r>'
-      let g:RubyRunner_keep_focus_key = '<C-S-f>'
+      exec 'set winaltkeys=no'
+      let g:RubyRunner_key = '<M-r>'
+      let g:RubyRunner_keep_focus_key = '<M-R>'
     endif
   else "Windows key shortcuts
-    let g:RubyRunner_key = '<C-S-r>'
-    let g:RubyRunner_keep_focus_key = '<C-S-f>'
+    exec 'set winaltkeys=no'
+    let g:RubyRunner_key = '<M-r>'
+    let g:RubyRunner_keep_focus_key = '<M-R>'
   endif
 else
   let g:RubyRunner_key = '<Leader>r'
@@ -40,7 +41,6 @@ function! s:RunRuby()
 
   " Prepend 'STDOUT.sync=true' to the script so STDOUT and STDERR appear in the correct order.
   " Also fix load path for require/require_relative.
-  "exec 'silent w ! sed "1s/^/STDOUT.sync=true; $:.unshift Dir.pwd; Kernel.class_eval { alias_method :require_relative, :require };/" | ruby >' s:output_file '2>&1'
   exec 'silent w ! ruby -pe ''p "STDOUT.sync=true; $:.unshift Dir.pwd; Kernel.class_eval { alias_method :require_relative, :require };" if $.==1 '' | ruby >' s:output_file '2>&1'
 
   cd -  " Back to old dir
@@ -88,4 +88,9 @@ if !hasmapto('RunRuby') && has('autocmd')
   " Close output buffer
   exec 'au FileType ruby-runner map <buffer>' g:RubyRunner_key 'ZZ'
 
+  "Map RunRuby globally
+  if exists("g:RunRuby_map_globally")
+    exec 'map' g:RubyRunner_key ':RunRuby<CR>'
+    exec 'map' g:RubyRunner_keep_focus_key ':RunRuby<CR> <C-w>w'
+  endif
 endif
